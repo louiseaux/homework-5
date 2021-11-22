@@ -9,8 +9,8 @@ contract VolcanoCoin is ERC20, Ownable {
     
     uint _totalSupply = 10000;
     
-    event Supply_increase(uint indexed);
-    event Transfer(address, uint);
+    event Supply_increase(uint);
+    event Transfer(address indexed, uint);
     
     mapping(address => Payment[]) payments;
     
@@ -23,26 +23,27 @@ contract VolcanoCoin is ERC20, Ownable {
         _mint(msg.sender, _totalSupply);
     }
     
-    function getPayments(address user) public view returns (Payment[] memory) {
-        return payments[user]; // returns tuple
-    }
-    
-    function getTokenSupply() public view returns (uint) {
-        return _totalSupply;
-    }
-    
-    function changeTokenSupply() public onlyOwner {
-        _totalSupply += 1000;
-        emit Supply_increase(_totalSupply);
-    }
-    
     function transferTo(address _recipient, uint _amount) public {
         require(_amount > 0, "Amount must be > 0");
         
         transfer(_recipient, _amount);
-        
-        payments[_recipient].push(Payment({recipient: _recipient, amount: _amount}));
-        
         emit Transfer(_recipient, _amount);
+        
+        Payment memory payment;
+        payment.recipient = _recipient;
+        payment.amount = _amount;
+        
+        payments[msg.sender].push(payment);
+    }
+    
+    function getPayments(address user) public view returns (Payment[] memory) {
+        return payments[user];
+    }
+    
+    function changeOwnerSupply(uint _amount) public onlyOwner {
+        _totalSupply += _amount;
+        emit Supply_increase(_amount);
+        
+        _mint(msg.sender, _amount);
     }
 }
